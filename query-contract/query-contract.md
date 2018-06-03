@@ -1,42 +1,64 @@
 # query-contract
 
+### 1. make sure parity is running and on KOVAN test network (id=42)
+Start parity on kovan:
+``` 
+parity --chain kovan --no-warp
+```
 
-## get the tx confirmation of your contract you deployed
+Now open the ```Parity UI``` MacOS application.
+
+
+### 2. get the tx confirmation of your contract you just deployed
+To see how to write the contract, look at [solidity-compiler/solidity-compiler.md](./../solidity-compiler/solidity-compiler.md)
+
+It should look something like this:
 ``` 
 0x6874ea75a56a0578b9cc70f1650cc41e21e813c83abaf1e7fa1dd00ef091677b
 ```
 
-## make sure parity is running
+### 3. derive the contract address from the confirmation tx above
+Required parameters below:
+    a: RPC function name: ```"method":"eth_getTransactionReceipt"```
+    b: Confirmation tx address: ```"params":["0x6874ea75a56a0578b9cc70f1650cc41e21e813c83abaf1e7fa1dd00ef091677b"]```
+    c: Kovan test network id: ```"id":42```
+    d: Ethereum server endpoint: ```http://127.0.0.1:8545``` or ```https://kovan.infura.io```
+
+Combine these all together and now curl the Ethereum node from the command line:
 ``` 
-parity ui --chain kovan
+curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getTransactionReceipt","params":["0x6874ea75a56a0578b9cc70f1650cc41e21e813c83abaf1e7fa1dd00ef091677b"],"id":42}' -H "Content-Type: application/json" https://kovan.infura.io
 ```
 
-## derive the contract address for the tx
+You should get a response like this:
 ``` 
-to do...
+{"jsonrpc":"2.0","result":{"blockHash":"0xf12836d5fe84e1fa6dd398ed048decc1675efe31633e1ce14fc47bc552d90b85","blockNumber":"0x72340f","contractAddress":"0x85f217960b2eaa974e46a4f55ca3aeb5fbef9b2b","cumulativeGasUsed":"0x28892","gasUsed":"0x23044","logs":[],"logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","root":null,"status":"0x1","transactionHash":"0x6874ea75a56a0578b9cc70f1650cc41e21e813c83abaf1e7fa1dd00ef091677b","transactionIndex":"0x1"},"id":42}
 ```
 
-## derive the contract function name and args
-``` 
-to do...
-```
+Now you have your contract address in which to query:
+```"contractAddress":"0x85f217960b2eaa974e46a4f55ca3aeb5fbef9b2b"```
 
 ## get the keccak hash online
+Ues this [website](https://emn178.github.io/online-tools/keccak_256.html)
+Get the contract you want to call. In this example I am calling: ```helloSunshine()``` that takes no arguments.
+
 ``` 
-https://emn178.github.io/online-tools/keccak_256.html
 keccak-256( helloSunshine() ) 
 ->
 22644474738e5d947760bd48f9f61db8da39e72bcd707922ea279f0ddbe0c62b
 ```
 
+Grab first 4 bytes/ 8 characters (1 byte = 2 characters) of the hash above:
+
 ``` 
-grab first 4 bytes
 ->
 0x22644474
 ```
 
+Append with padding zeros and length bit.
+Should look something like this: 
+[4byte signature][padding 0's][length of payload: function byte length + arguments byte length + length byte length]
+
 ``` 
-append with padding zeros and length bit
 ->
 0x226444740000000000000000000000000000000000000000000000000000000000000005
 ```
